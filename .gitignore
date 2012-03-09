@@ -1,0 +1,4 @@
+*.o
+nbody
+images
+images/*
