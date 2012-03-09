@@ -24,8 +24,8 @@ int main()
   // Setup simulation
   NBodyPhysics *physics = new NBodyPhysics();
 
-  Body b1( Point(0, 0), 1.0);
-  Body b2( Point(1, 1), 1.0);
+  Body b1( Point(50, 50), 2000000.0);
+  Body b2( Point(55, 65), 1000000.0);
 
   physics->addBody(b1);
   physics->addBody(b2);
@@ -34,12 +34,13 @@ int main()
 
   // Run simulation
   double dt = 0.01;
-  double tmax = 1;
+  double tmax = 10000;
   int num_steps = tmax / dt;
 
   for (int t = 0; t < num_steps; ++t){
     physics->updateState(dt);
     physics->saveState(saved_states);
+    //    physics->printState();
   }
 
   // Done. Write images
@@ -49,7 +50,7 @@ int main()
   int image_number = 0;
   typedef std::vector<Body>::iterator vec_iter;
 
-  for (vec_iter it = saved_states.begin(); it != saved_states.end(); it += num_bodies){
+  for (vec_iter it = saved_states.begin(); it < saved_states.end(); it += (num_bodies*10000)){
     writeImage(image_number, saved_states, it, it + num_bodies);
     image_number ++;
   }
@@ -59,7 +60,10 @@ int main()
 
 inline void setPixel(int x, int y, int color, png::image< png::rgb_pixel > *image)
 {
-  (*image)[y][x] = png::rgb_pixel(color, color, color);
+  if ((x >= 0 && x < IMAGE_WIDTH) && (y >= 0 && y < IMAGE_HEIGHT)){
+    cout << "setting: " << x << "," << y << endl;
+    (*image)[y][x] = png::rgb_pixel(color, color, color);
+  }
 }
 
 void writeImage(int image_number, std::vector<Body>& saved_states,
@@ -72,8 +76,8 @@ void writeImage(int image_number, std::vector<Body>& saved_states,
   // Set each body as a white pixel
   std::vector<Body>::iterator it = start;
   while (it != end){
-    double x = start->position.x;
-    double y = start->position.y;
+    double x = it->position.x;
+    double y = it->position.y;
     double mass = start->mass;
 
     setPixel( imageCoordsX(x), imageCoordsY(y), 255, &image);
@@ -86,6 +90,7 @@ void writeImage(int image_number, std::vector<Body>& saved_states,
   out << image_number;
   s = out.str();
 
+  cout << "saving image\n";
   std::string filename = "images/" + s + ".png";
 
   // Save image

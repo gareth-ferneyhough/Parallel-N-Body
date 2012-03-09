@@ -33,25 +33,25 @@ class Vector{
 class Point{
  public:
   Point(){
-    cout << "c\n";
+    //    cout << "c\n";
     x = -9999;
     y = -9999;
   }
 
   Point(double x, double y){
-    cout << "d\n";
+    //    cout << "d\n";
     this->x = x;
     this->y = y;
   }
 
   Point(const Point& p){
-    cout << "cpy\n";
+    //    cout << "cpy\n";
     x = p.x;
     y = p.y;
   }
 
   Point& operator=(const Point& p){
-    cout << "ass\n";
+    //    cout << "ass\n";
     x = p.x;
     y = p.y;
     return *this;
