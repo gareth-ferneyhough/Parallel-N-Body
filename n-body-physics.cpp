@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <iostream>
+#include <ostream>
 #include "n-body-physics.h"
 
 void NBodyPhysics::addBody(Body b)
@@ -9,6 +10,7 @@ void NBodyPhysics::addBody(Body b)
 
 void NBodyPhysics::updateState(double dt)
 {
+  cout << "\n\nupdating forces\n";
   updateForces();
 
   // Update position and velocity
@@ -31,7 +33,7 @@ void NBodyPhysics::saveState(std::vector<Body>& state) const
 void NBodyPhysics::printState() const
 {
   for(unsigned int i = 0; i < bodies.size(); ++i){
-    std::cout << "Body " << i << " Position: " << bodies[i].position.x << "," << bodies[i].position.y << " \nVelocity: " << bodies[i].velocity.x << "," << bodies[i].velocity.y << std::endl << std::endl;
+    //std::cout << "Body " << i << " Position: " << bodies[i].position.x << "," << bodies[i].position.y << " \nVelocity: " << bodies[i].velocity.x << "," << bodies[i].velocity.y << std::endl << std::endl;
   }
 }
 
@@ -43,13 +45,16 @@ int NBodyPhysics::getNumBodies() const
 void NBodyPhysics::updateForces()
 {
   for(unsigned int i = 0; i < bodies.size(); ++i){
-    bodies[i].total_force.x = 0;
-    bodies[i].total_force.y = 0;
+    bodies[i].total_force = Vector(0., 0.);//.x = 0;
+    //    bodies[i].total_force.y = 0;
 
     for(int unsigned j = 0; j < bodies.size(); j++){
-      Vector force = calculateForce(bodies[i], bodies[j]);
-      bodies[i].total_force.x += force.x;
-      bodies[i].total_force.y += force.y;
+      // maybe remove this if statement //
+      if (i != j){
+        Vector force = calculateForce(bodies[i], bodies[j]);
+        bodies[i].total_force += force;
+        //        bodies[i].total_force.y += force.y;
+      }
     }
   }
 }
@@ -58,29 +63,17 @@ Vector NBodyPhysics::calculateForce(Body& b1, Body& b2)
 {
   Vector force;
   double top_of_equation = G * b1.mass * b2.mass;
-  double x_distance = b2.position.x - b1.position.x; // these may be negative, but we square it below
-  double y_distance = b2.position.y - b1.position.y;
 
-  if (x_distance == 0)
-    force.x = 0;
-  else force.x = top_of_equation / (x_distance * x_distance);
+  double magnitude = Vector(b2.position - b1.position).magnitude();
+  if (magnitude == 0.)
+    return Vector(0., 0.);
 
-  if (y_distance == 0)
-    force.y = 0;
-  else force.y = top_of_equation / (y_distance * y_distance);
+  Vector direction = Vector(b2.position - b1.position) / magnitude;
+  return Vector((direction * top_of_equation) / magnitude*magnitude);
+}
 
-  // Calculate force in the direction that b1 is experiencing
-  //       |
-  // -1, 1 | 1, 1
-  // ------------
-  // -1,-1 | 1,-1
-  //       |
-
-  if (b1.position.x > b2.position.x) //b1 is to the right of b2, so x-component should be negative
-    force.x *= -1;
-
-  if (b1.position.y > b2.position.y)
-    force.y *= -1;
-
-  return force;
+std::ostream& operator<<(std::ostream& os, const Vector& v)
+{
+  os << "[" << v.x << "," << v.y << "]" << endl;
+  return os;
 }

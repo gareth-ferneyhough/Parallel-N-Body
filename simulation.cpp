@@ -1,5 +1,7 @@
 #define BOOST_CHRONO_HEADER_ONLY
 
+#include <iomanip>
+#include <sstream>
 #include <boost/chrono.hpp>
 #include <png++/png.hpp>
 #include "n-body-physics.h"
@@ -24,8 +26,8 @@ int main()
   // Setup simulation
   NBodyPhysics *physics = new NBodyPhysics();
 
-  Body b1( Point(50, 50), 2000000.0);
-  Body b2( Point(55, 65), 1000000.0);
+  Body b1( Vector(0, 0), 6E24);
+  Body b2( Vector(406700000, 0), 7.4E22);
 
   physics->addBody(b1);
   physics->addBody(b2);
@@ -33,14 +35,14 @@ int main()
   std::vector<Body> saved_states;
 
   // Run simulation
-  double dt = 0.01;
-  double tmax = 10000;
+  double dt = 1;
+  double tmax = 1000;
   int num_steps = tmax / dt;
 
   for (int t = 0; t < num_steps; ++t){
     physics->updateState(dt);
     physics->saveState(saved_states);
-    //    physics->printState();
+    physics->printState();
   }
 
   // Done. Write images
@@ -50,7 +52,7 @@ int main()
   int image_number = 0;
   typedef std::vector<Body>::iterator vec_iter;
 
-  for (vec_iter it = saved_states.begin(); it < saved_states.end(); it += (num_bodies*10000)){
+  for (vec_iter it = saved_states.begin(); it < saved_states.end(); it += (num_bodies)){
     writeImage(image_number, saved_states, it, it + num_bodies);
     image_number ++;
   }
@@ -87,7 +89,7 @@ void writeImage(int image_number, std::vector<Body>& saved_states,
   // Create filename
   std::string s;
   std::stringstream out;
-  out << image_number;
+  out << std::setfill('0') << std::setw(4) << image_number; 
   s = out.str();
 
   cout << "saving image\n";

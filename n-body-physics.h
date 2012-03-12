@@ -1,5 +1,8 @@
 #include <vector>
 #include <iostream>
+#include <ostream>
+#include <cmath>
+
 using std::cout;
 using std::endl;
 
@@ -26,49 +29,43 @@ class Vector{
     return *this;
   }
 
-  double x;
-  double y;
-};
-
-class Point{
- public:
-  Point(){
-    //    cout << "c\n";
-    x = -9999;
-    y = -9999;
+  double magnitude(){
+    return sqrt(x*x + y*y);
   }
 
-  Point(double x, double y){
-    //    cout << "d\n";
-    this->x = x;
-    this->y = y;
+  Vector operator-(const Vector& rhs){
+    return Vector(this->x - rhs.x, this->y - rhs.y);
   }
 
-  Point(const Point& p){
-    //    cout << "cpy\n";
-    x = p.x;
-    y = p.y;
+  Vector operator+(const Vector& rhs){
+    return Vector(this->x + rhs.x, this->y + rhs.y);
   }
 
-  Point& operator=(const Point& p){
-    //    cout << "ass\n";
-    x = p.x;
-    y = p.y;
-    return *this;
+  Vector operator+=(const Vector& rhs){
+    return Vector(this->x += rhs.x, this->y += rhs.y);
+  }
+
+  Vector operator*(const double& d){
+    return Vector(this->x *d, this->y *d);
+  }
+
+  Vector operator/(const double& d){
+    return Vector(this->x / d, this->y / d);
   }
 
   double x;
   double y;
+  friend std::ostream& operator<<(std::ostream& os, const Vector& v);
 };
 
 class Body{
  public:
-  explicit Body(Point position, double mass){
+  explicit Body(Vector position, double mass){
     this->position = position, this->mass = mass;
     total_force = Vector(0, 0);
     velocity = Vector(0, 0);
   }
-  Point position; // Meters
+  Vector position; // Meters
   double mass;    // Kg
   Vector total_force; // Newtons
   Vector velocity;
