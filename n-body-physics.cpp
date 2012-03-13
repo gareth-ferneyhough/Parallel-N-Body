@@ -10,7 +10,6 @@ void NBodyPhysics::addBody(Body b)
 
 void NBodyPhysics::updateState(double dt)
 {
-  cout << "\n\nupdating forces\n";
   updateForces();
 
   // Update position and velocity
@@ -33,7 +32,7 @@ void NBodyPhysics::saveState(std::vector<Body>& state) const
 void NBodyPhysics::printState() const
 {
   for(unsigned int i = 0; i < bodies.size(); ++i){
-    //std::cout << "Body " << i << " Position: " << bodies[i].position.x << "," << bodies[i].position.y << " \nVelocity: " << bodies[i].velocity.x << "," << bodies[i].velocity.y << std::endl << std::endl;
+    std::cout << "Body " << i << " Position: " << bodies[i].position.x << "," << bodies[i].position.y << " \nVelocity: " << bodies[i].velocity.x << "," << bodies[i].velocity.y << std::endl << std::endl;
   }
 }
 
@@ -45,15 +44,13 @@ int NBodyPhysics::getNumBodies() const
 void NBodyPhysics::updateForces()
 {
   for(unsigned int i = 0; i < bodies.size(); ++i){
-    bodies[i].total_force = Vector(0., 0.);//.x = 0;
-    //    bodies[i].total_force.y = 0;
+    bodies[i].total_force = Vector(0., 0.);
 
     for(int unsigned j = 0; j < bodies.size(); j++){
       // maybe remove this if statement //
       if (i != j){
         Vector force = calculateForce(bodies[i], bodies[j]);
         bodies[i].total_force += force;
-        //        bodies[i].total_force.y += force.y;
       }
     }
   }
