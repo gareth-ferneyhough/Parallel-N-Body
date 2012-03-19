@@ -62,7 +62,7 @@ Vector NBodyPhysics::calculateForce(Body& b1, Body& b2)
     return Vector(0., 0., 0.);
 
   Vector direction = Vector(b2.position - b1.position) / magnitude;
-  return Vector((direction * top_of_equation) / magnitude*magnitude);
+  return Vector((direction * top_of_equation) / (magnitude*magnitude));
 }
 
 std::ostream& operator<<(std::ostream& os, const Vector& v)

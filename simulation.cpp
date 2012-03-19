@@ -16,12 +16,12 @@ int imageCoordsX(double initial_x);
 int imageCoordsY(double initial_y);
 void drawCircle(int center_x, int center_y, int radius, int color, png::image< png::rgb_pixel > *image);
 
-const int IMAGE_HEIGHT = 1000;
-const int IMAGE_WIDTH  = 1000;
-const double MIN_X = -3E9;
-const double MAX_X =  3E9;
-const double MIN_Y = -3E9;
-const double MAX_Y =  3E9;
+const int IMAGE_HEIGHT = 10000;
+const int IMAGE_WIDTH  = 10000;
+const double MIN_X = -3E12;
+const double MAX_X =  3E12;
+const double MIN_Y = -3E12;
+const double MAX_Y =  3E12;
 
 int main()
 {
@@ -54,8 +54,8 @@ int main()
   int day_count = 365 * 0.5;    // sim for 1 year
   int runtime = day_count * 86400 / dt;
 
-  for (int t = 0; t < runtime; ++t){
-    if (t % 100 == 0)
+  for (int t = 0; t < 1; ++t){
+    if (t % 1000 == 0)
       cout << (float)t / runtime * 100 << endl;
 
     physics->updateState(dt);
@@ -64,7 +64,7 @@ int main()
   }
 
   // Done. Write images at specified interval
-  const int output_frequency = 1 * 86400 /dt; // output images once per day
+  const int output_frequency = 1;//1 * 86400 /dt; // output images once per day
   const int num_bodies = physics->getNumBodies();
   assert( saved_states.size() % num_bodies == 0);
 
@@ -131,6 +131,8 @@ int imageCoordsY(double initial_y)
 
 void drawCircle(int center_x, int center_y, int radius, int color, png::image< png::rgb_pixel > *image)
 {
+  std::cout << "center: " << center_x << "," << center_y << endl;
+
   for(int x = center_x - radius; x <= center_x + radius; x++)
     for(int y = center_y - radius; y <= center_y + radius; y++){
       if (( (x - center_x) * (x - center_x) + (y - center_y) * (y - center_y)) < (radius * radius))
