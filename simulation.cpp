@@ -1,6 +1,7 @@
 #define BOOST_CHRONO_HEADER_ONLY
 
 #include <iomanip>
+#include <fstream>
 #include <sstream>
 #include <boost/chrono.hpp>
 #include <png++/png.hpp>
@@ -17,44 +18,60 @@ void drawCircle(int center_x, int center_y, int radius, int color, png::image< p
 
 const int IMAGE_HEIGHT = 1000;
 const int IMAGE_WIDTH  = 1000;
-const int MIN_X = -6E8;
-const int MAX_X =  6E8;
-const int MAX_Y =  6E8;
-const int MIN_Y = -6E8;
+const double MIN_X = -3E9;
+const double MAX_X =  3E9;
+const double MIN_Y = -3E9;
+const double MAX_Y =  3E9;
 
 int main()
 {
   // Setup simulation
   NBodyPhysics *physics = new NBodyPhysics();
 
-  Body b1( Vector(0, 0), 6E14); //6E24
-  Body b2( Vector(406700000, 0), 7.4E12); //7.4E22
-  b2.velocity = Vector(0, -5000000);
+  // Read state file
+  std::ifstream fin;
+  fin.open("solar_system.csv");
+  
+  for (int i = 0; i < 25; ++i){
+    double pos_x, pos_y, pos_z;
+    double dx, dy, dz;
+    double mass;
+    
+    fin >> pos_x >> pos_y >> pos_z >> dx >> dy >> dz >> mass;
+    const int KM = 1000;
+    Body b1( Vector(pos_x *KM, pos_y*KM, pos_z*KM), Vector(dx*KM, dy*KM, dz*KM), mass);
 
-  physics->addBody(b1);
-  physics->addBody(b2);
+    physics->addBody(b1);
+  }
+
+  fin.close();
+  physics->printState();
 
   std::vector<Body> saved_states;
 
-  // Run simulation
-  double dt = 1;
-  double tmax = 1E4;
-  int num_steps = tmax / dt;
+  // // Run simulation
+  int dt = 60;                // one minute time step
+  int day_count = 365 * 0.5;    // sim for 1 year
+  int runtime = day_count * 86400 / dt;
 
-  for (int t = 0; t < num_steps; ++t){
-    physics->printState();
+  for (int t = 0; t < runtime; ++t){
+    if (t % 100 == 0)
+      cout << (float)t / runtime * 100 << endl;
+
     physics->updateState(dt);
     physics->saveState(saved_states);
+    physics->printState();
   }
 
-  // Done. Write images
+  // Done. Write images at specified interval
+  const int output_frequency = 1 * 86400 /dt; // output images once per day
   const int num_bodies = physics->getNumBodies();
   assert( saved_states.size() % num_bodies == 0);
 
   int image_number = 0;
   typedef std::vector<Body>::iterator vec_iter;
 
-  for (vec_iter it = saved_states.begin(); it < saved_states.end(); it += (num_bodies)*10){
+  for (vec_iter it = saved_states.begin(); it < saved_states.end(); it += (num_bodies)*output_frequency){
     writeImage(image_number, saved_states, it, it + num_bodies);
     image_number ++;
   }
@@ -116,7 +133,7 @@ void drawCircle(int center_x, int center_y, int radius, int color, png::image< p
 {
   for(int x = center_x - radius; x <= center_x + radius; x++)
     for(int y = center_y - radius; y <= center_y + radius; y++){
-      if (( (x - center_x) * (x - center_x) + (y - center_y) * (y - center_y)) < (radius * radius)) 
-           setPixel(x, y, 255, image);
+      if (( (x - center_x) * (x - center_x) + (y - center_y) * (y - center_y)) < (radius * radius))
+        setPixel(x, y, 255, image);
     }
 }

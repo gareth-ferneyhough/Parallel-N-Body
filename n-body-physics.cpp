@@ -16,11 +16,8 @@ void NBodyPhysics::updateState(double dt)
   for(unsigned int i = 0; i < bodies.size(); ++i){
     Vector last_velocity = bodies[i].velocity;
 
-    bodies[i].velocity.x += (dt * bodies[i].total_force.x) / bodies[i].mass;
-    bodies[i].velocity.y += (dt * bodies[i].total_force.y) / bodies[i].mass;
-
-    bodies[i].position.x += (dt * last_velocity.x);
-    bodies[i].position.y += (dt * last_velocity.y);
+    bodies[i].velocity += (bodies[i].total_force * dt) / bodies[i].mass;
+    bodies[i].position += (last_velocity * dt);
   }
 }
 
@@ -32,7 +29,7 @@ void NBodyPhysics::saveState(std::vector<Body>& state) const
 void NBodyPhysics::printState() const
 {
   for(unsigned int i = 0; i < bodies.size(); ++i){
-    std::cout << "Body " << i << " Position: " << bodies[i].position.x << "," << bodies[i].position.y << " \nVelocity: " << bodies[i].velocity.x << "," << bodies[i].velocity.y << std::endl << std::endl;
+    std::cout << "Body " << i << " Position: " << bodies[i].position.x << ", " << bodies[i].position.y << ", " << bodies[i].position.z << " \nVelocity: " << bodies[i].velocity.x << ", " << bodies[i].velocity.y << ", " << bodies[i].velocity.z << std::endl << std::endl;
   }
 }
 
@@ -44,7 +41,7 @@ int NBodyPhysics::getNumBodies() const
 void NBodyPhysics::updateForces()
 {
   for(unsigned int i = 0; i < bodies.size(); ++i){
-    bodies[i].total_force = Vector(0., 0.);
+    bodies[i].total_force = Vector(0., 0., 0.);
 
     for(int unsigned j = 0; j < bodies.size(); j++){
       // maybe remove this if statement //
@@ -58,12 +55,11 @@ void NBodyPhysics::updateForces()
 
 Vector NBodyPhysics::calculateForce(Body& b1, Body& b2)
 {
-  Vector force;
   double top_of_equation = G * b1.mass * b2.mass;
 
   double magnitude = Vector(b2.position - b1.position).magnitude();
   if (magnitude == 0.)
-    return Vector(0., 0.);
+    return Vector(0., 0., 0.);
 
   Vector direction = Vector(b2.position - b1.position) / magnitude;
   return Vector((direction * top_of_equation) / magnitude*magnitude);
@@ -71,6 +67,6 @@ Vector NBodyPhysics::calculateForce(Body& b1, Body& b2)
 
 std::ostream& operator<<(std::ostream& os, const Vector& v)
 {
-  os << "[" << v.x << "," << v.y << "]" << endl;
+  os << "[" << v.x << "," << v.y << "," << v.z << "]" << endl;
   return os;
 }
