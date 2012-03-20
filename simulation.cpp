@@ -10,7 +10,8 @@
 inline void setPixel(int x, int y, int color, png::image< png::rgb_pixel > *image);
 void writeImage(int image_number, std::vector<Body>& saved_states,
                 std::vector<Body>::iterator start,
-                std::vector<Body>::iterator end);
+                std::vector<Body>::iterator end,
+		std::ostream& fout);
 
 int imageCoordsX(double initial_x);
 int imageCoordsY(double initial_y);
@@ -51,16 +52,16 @@ int main()
 
   // // Run simulation
   int dt = 60;                // one minute time step
-  int day_count = 365 * 0.5;    // sim for 1 year
+  int day_count = 365 * 2;    // sim for 1 year
   int runtime = day_count * 86400 / dt;
 
-  for (int t = 0; t < 1; ++t){
-    if (t % 1000 == 0)
-      cout << (float)t / runtime * 100 << endl;
-
+  for (int t = 0; t < runtime; ++t){
     physics->updateState(dt);
-    physics->saveState(saved_states);
-    physics->printState();
+
+    if (t % 1000 == 0){
+      cout << (float)t / runtime * 100 << endl;
+      physics->saveState(saved_states);
+    }
   }
 
   // Done. Write images at specified interval
@@ -68,14 +69,18 @@ int main()
   const int num_bodies = physics->getNumBodies();
   assert( saved_states.size() % num_bodies == 0);
 
+  std::ofstream fout;
+  fout.open("data.bin", std::ios::out | std::ios::binary);
+
   int image_number = 0;
   typedef std::vector<Body>::iterator vec_iter;
 
   for (vec_iter it = saved_states.begin(); it < saved_states.end(); it += (num_bodies)*output_frequency){
-    writeImage(image_number, saved_states, it, it + num_bodies);
+    writeImage(image_number, saved_states, it, it + num_bodies, fout);
     image_number ++;
   }
 
+  fout.close();
   return 0;
 }
 
@@ -88,33 +93,38 @@ inline void setPixel(int x, int y, int color, png::image< png::rgb_pixel > *imag
 
 void writeImage(int image_number, std::vector<Body>& saved_states,
                 std::vector<Body>::iterator start,
-                std::vector<Body>::iterator end)
+                std::vector<Body>::iterator end,
+		std::ostream& fout)
 {
   // Create new png
-  png::image< png::rgb_pixel > image(IMAGE_WIDTH, IMAGE_HEIGHT);
+  // png::image< png::rgb_pixel > image(IMAGE_WIDTH, IMAGE_HEIGHT);
 
   // Set each body as a white circle
   std::vector<Body>::iterator it = start;
   while (it != end){
     double x = it->position.x;
     double y = it->position.y;
-    double mass = start->mass;
+    double z = it->position.z;
 
-    drawCircle( imageCoordsX(x), imageCoordsY(y), 10, 255, &image);
+    fout.write(reinterpret_cast<char*>(&x), sizeof(x));
+    fout.write(reinterpret_cast<char*>(&y), sizeof(y));
+    fout.write(reinterpret_cast<char*>(&z), sizeof(z));
+
+    //    drawCircle( imageCoordsX(x), imageCoordsY(y), 10, 255, &image);
     it++;
   }
 
-  // Create filename
-  std::string s;
-  std::stringstream out;
-  out << std::setfill('0') << std::setw(4) << image_number;
-  s = out.str();
+  //  // Create filename
+  // std::string s;
+  // std::stringstream out;
+  // out << std::setfill('0') << std::setw(4) << image_number;
+  // s = out.str();
 
-  cout << "saving image\n";
-  std::string filename = "images/" + s + ".png";
+  // cout << "saving image\n";
+  // std::string filename = "images/" + s + ".png";
 
-  // Save image
-  image.write(filename);
+  // // Save image
+  // image.write(filename);
 }
 
 int imageCoordsX(double initial_x)
