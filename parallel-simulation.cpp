@@ -3,6 +3,7 @@
 #include <fstream>
 #include <boost/chrono.hpp>
 #include <boost/mpi.hpp>
+#include <boost/mpi/collectives.hpp>
 #include "n-body-physics.h"
 
 namespace mpi = boost::mpi;
@@ -18,15 +19,41 @@ int main(int argc, char* argv[])
   mpi::communicator world;
 
   if (world.rank() == 0) {
-    Body b( Vector(1, 2, 3), Vector(4, 5, 6), 10);
-    world.send(1, 0, b);
+    std::vector<Body> bodies;
+    std::vector<Body> bodies_new;
+    Body b1( Vector(1.4, 2.4, 3.4), Vector(4, 5, 6), 10);
+    Body b2( Vector(1.2, 2.2, 3.2), Vector(4.2, 5.2, 6.2), 10.2);
+
+    Body bb[2];
+    bb[0] = b1;
+    bb[1] = b2;
+
+    bodies.push_back(b1);
+    bodies.push_back(b2);
+
+    mpi::all_gather(world, &(bodies[0]), 2, bodies_new);
   }
 
   else {
-    Body b2;
-    world.recv(0, 0, b2);
+    std::vector<Body> bodies;
+    std::vector<Body> bodies_new;
+    Body b1( Vector(1.9, 2.9, 3.9), Vector(4, 5, 6), 10);
+    Body b2( Vector(1.23, 2.23, 3.23), Vector(4.23, 5.23, 6.23), 10.23);
 
-    cout << b2.position << b2.velocity << b2.total_force << b2.mass << endl;
+    Body bb[2];
+    bb[0] = b1;
+    bb[1] = b2;
+
+    bodies.push_back(b1);
+    bodies.push_back(b2);
+
+    mpi::all_gather(world, &(bodies[0]), 2, bodies_new);
+
+    std::vector<Body>::iterator it;
+    for (it = bodies_new.begin(); it != bodies_new.end(); ++it){
+      cout << "\nbody: ";
+      cout << it->position << it->velocity << it->total_force << it->mass << endl;
+    }
   }
 
   return 0;

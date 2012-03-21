@@ -1,18 +1,19 @@
-LIBS  = -lboost_system -lpng
+LIBS  = -lboost_system
 CFLAGS = -Wall -O2 -L /usr/local/lib
 
 # Should be equivalent to your list of C files, if you don't build selectively
 SRC=$(wildcard *.cpp)
 
-all:	obj nbody par
+all:	obj par seq
 
 obj:	$(SRC)
-	g++ -c $(SRC) $^ 
-
-nbody:	$(SRC)
-	g++ -o nbody n-body-physics.o simulation.o $(CFLAGS) $(LIBS)
+	mpic++ -c $(SRC) $^ 
 
 par:	$(SRC)
-	g++ -o par-nbody n-body-physics.o parallel-simulation.o $(CFLAGS) $(LIBS)
+	mpic++ -o par n-body-physics.o parallel-simulation.o $(CFLAGS) $(LIBS) -lboost_mpi
+
+seq:	$(SRC)
+	g++ -o seq n-body-physics.o sequential-simulation.o $(CFLAGS) $(LIBS)
+
 clean:
-	rm *.o nbody
+	rm *.o par seq

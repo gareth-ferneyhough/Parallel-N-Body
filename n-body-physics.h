@@ -61,9 +61,9 @@ class Vector{
   double x;
   double y;
   double z;
-  friend std::ostream& operator<<(std::ostream& os, const Vector& v);
 
  private:
+  friend std::ostream& operator<<(std::ostream& os, const Vector& v);
   friend class boost::serialization::access;
 
   template<class Archive>
@@ -82,10 +82,10 @@ class Body{
     this->position = position, this->velocity = velocity, this->mass = mass;
     total_force = Vector(0, 0, 0);
   }
-  Vector position; // Meters
-  Vector velocity;
-  Vector total_force; // Newtons
-  double mass;    // Kg
+  Vector position;      // Meters
+  Vector velocity;      // Meters / second
+  Vector total_force;   // Newtons
+  double mass;          // Kg
 
  private:
   friend class boost::serialization::access;
@@ -96,7 +96,7 @@ class Body{
         ar & position;
         ar & mass;
         ar & velocity;
-        //ar & total_force;
+        //ar & total_force; // dont send force. It is pointless.
     }
 };
 
@@ -109,7 +109,7 @@ class NBodyPhysics{
   int getNumBodies() const;
 
  private:
-  static const double G = 6.674e-11; // check this notation!
+  static const double G = 6.674e-11;
   std::vector<Body> bodies;
 
   void updateForces();
