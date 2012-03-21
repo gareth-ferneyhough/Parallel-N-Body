@@ -36,6 +36,8 @@ int main(int argc, char* argv[])
   NBodyPhysics *physics = new NBodyPhysics();
   std::vector<Body> state;
   std::vector<Body> new_state;
+  state.reserve(num_bodies);
+  new_state.reserve(num_bodies);
 
   const int my_rank       = world.rank();
   const int my_body_begin = my_rank * bodies_per_process;
@@ -43,8 +45,8 @@ int main(int argc, char* argv[])
   if (my_rank == 0) loadStateFromFile(state, num_bodies);
 
   // Broadcast initial state from root process
-  broadcast(world, state, 0);
-
+  broadcast(world, &(state[0]), num_bodies, 0);
+  
   // Main Loop
   for (int t = 0; t < runtime; ++t){
     physics->updateState(state, my_body_begin, bodies_per_process, dt);             // update the portion I am responsible for

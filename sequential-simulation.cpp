@@ -40,6 +40,9 @@ int main()
   std::vector<Body> saved_states;
   saved_states.reserve(output_frequency / runtime);
 
+  // Start timer
+  boost::chrono::system_clock::time_point start = boost::chrono::system_clock::now();
+
   // Main loop
   for (int t = 0; t < runtime; ++t){
     physics->updateState(dt);
@@ -50,7 +53,10 @@ int main()
     }
   }
 
-  // Done. Write positions.
+  // Done. Stop timer and Write positions.
+  boost::chrono::duration<double> sec = boost::chrono::system_clock::now() - start;
+  std::cout << "took " << sec.count() << " seconds\n";
+
   const int num_bodies = physics->getNumBodies();
   assert( saved_states.size() % num_bodies == 0);
 
@@ -58,7 +64,6 @@ int main()
   fout.open("data.bin", std::ios::out | std::ios::binary);
 
   typedef std::vector<Body>::iterator vec_iter;
-
   for (vec_iter it = saved_states.begin(); it < saved_states.end(); it += num_bodies){
     writePosition(saved_states, it, it + num_bodies, fout);
   }

@@ -103,7 +103,7 @@ class Body{
 class NBodyPhysics{
  public:
   void addBody(Body b);
-  void updateState(std::vector<Body>& state, const int index_begin, const int num_to_update, const double dt);
+  void updateState(std::vector<Body>& state, const unsigned int index_begin, const unsigned int num_to_update, const double dt);
   void updateState(double dt);
   void saveState(std::vector<Body>&) const;
   void printState() const;
@@ -116,6 +116,6 @@ class NBodyPhysics{
   std::vector<Body> bodies;
 
   void updateForces();
-  void updateForces(std::vector<Body>& state, const int index_begin, const int num_to_update);
+  void updateForces(std::vector<Body>& state, const unsigned int index_begin, const unsigned int num_to_update);
   Vector calculateForce(Body &b1, Body &b2);
 };

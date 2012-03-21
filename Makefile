@@ -1,5 +1,5 @@
 LIBS  = -lboost_system
-CFLAGS = -Wall -O2 -L /usr/local/lib
+CFLAGS = -g -Wall -O2 -L /usr/local/lib
 
 # Should be equivalent to your list of C files, if you don't build selectively
 SRC=$(wildcard *.cpp)
@@ -7,7 +7,7 @@ SRC=$(wildcard *.cpp)
 all:	obj par seq
 
 obj:	$(SRC)
-	mpic++ -c $(SRC) $^ 
+	mpic++ -c $(SRC) $(CFLAGS) $^ 
 
 par:	$(SRC)
 	mpic++ -o par n-body-physics.o parallel-simulation.o $(CFLAGS) $(LIBS) -lboost_mpi

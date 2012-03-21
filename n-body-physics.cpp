@@ -21,13 +21,13 @@ void NBodyPhysics::updateState(double dt)
   }
 }
 
-void NBodyPhysics::updateState(std::vector<Body>& state, const int my_index_begin, const int num_to_update, const double dt)
+void NBodyPhysics::updateState(std::vector<Body>& state, const unsigned int my_index_begin, const unsigned int num_to_update, const double dt)
 {
   updateForces(state, my_index_begin, num_to_update);
 
   // Update position and velocity
   for(unsigned int i = my_index_begin; i < my_index_begin + num_to_update; ++i){
-    Vector last_velocity = bodies[i].velocity;
+    Vector last_velocity = state[i].velocity;
 
     state[i].velocity += (state[i].total_force * dt) / state[i].mass;
     state[i].position += (last_velocity * dt);
@@ -66,7 +66,7 @@ void NBodyPhysics::updateForces()
   }
 }
 
-void NBodyPhysics::updateForces(std::vector<Body>& state, const int index_begin, const int num_to_update)
+void NBodyPhysics::updateForces(std::vector<Body>& state, const unsigned int index_begin, const unsigned int num_to_update)
 {
   for(unsigned int i = index_begin; i < index_begin + num_to_update; ++i){
     state[i].total_force = Vector(0., 0., 0.);
