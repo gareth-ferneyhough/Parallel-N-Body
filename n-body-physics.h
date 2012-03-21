@@ -3,15 +3,16 @@
 #include <ostream>
 #include <cmath>
 
+#include <boost/serialization/serialization.hpp>
 using std::cout;
 using std::endl;
 
 class Vector{
  public:
   Vector(){
-    x = -9999;
-    y = -9999;
-    z = -9999;
+    x = 0;
+    y = 0;
+    z = 0;
   }
 
   Vector(double x_component, double y_component, double z_component){
@@ -61,18 +62,42 @@ class Vector{
   double y;
   double z;
   friend std::ostream& operator<<(std::ostream& os, const Vector& v);
+
+ private:
+  friend class boost::serialization::access;
+
+  template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+      ar & x;
+      ar & y;
+      ar & z;
+    }
 };
 
 class Body{
  public:
+  Body() {};
   explicit Body(Vector position, Vector velocity, double mass){
     this->position = position, this->velocity = velocity, this->mass = mass;
     total_force = Vector(0, 0, 0);
   }
   Vector position; // Meters
-  double mass;    // Kg
-  Vector total_force; // Newtons
   Vector velocity;
+  Vector total_force; // Newtons
+  double mass;    // Kg
+
+ private:
+  friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        ar & position;
+        ar & mass;
+        ar & velocity;
+        //ar & total_force;
+    }
 };
 
 class NBodyPhysics{
