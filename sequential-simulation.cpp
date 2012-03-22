@@ -4,80 +4,76 @@
 #include <boost/chrono.hpp>
 #include "n-body-physics.h"
 
-void writePosition(std::vector<Body>& saved_states,
-                   std::vector<Body>::iterator start,
-                   std::vector<Body>::iterator end,
+
+void saveSimToFile(const std::vector<Body>& saved_states, const int num_bodies);
+void loadStateFromFile(std::vector<Body>& initial_state, const int num_bodies);
+void writePosition(const std::vector<Body>& saved_states,
+                   std::vector<Body>::const_iterator start,
+                   std::vector<Body>::const_iterator end,
                    std::ostream& fout);
 
-int main()
+int main(int argc, char* argv[])
 {
-  // Setup simulation
-  NBodyPhysics *physics = new NBodyPhysics();
-
-  // Read state file
-  std::ifstream fin;
-  fin.open("solar_system.csv");
-
-  for (int i = 0; i < 25; ++i){
-    double pos_x, pos_y, pos_z;
-    double dx, dy, dz;
-    double mass;
-
-    fin >> pos_x >> pos_y >> pos_z >> dx >> dy >> dz >> mass;
-    const int KM = 1000;
-    Body b1( Vector(pos_x *KM, pos_y*KM, pos_z*KM), Vector(dx*KM, dy*KM, dz*KM), mass);
-
-    physics->addBody(b1);
-  }
-  fin.close();
-
-  // Run simulation
-  const int dt = 60;                            // one minute time step
-  const int day_count = 365 * 1;                // run for x years
-  const int runtime = day_count * 86400 / dt;   // runtime in seconds
-  const int output_frequency = 120;             // save positions every two minutes
+  // Simulation parameters
+  const int dt = 60;                           // one minute time step
+  const int day_count = 365 * .1;               // sim for x years
+  const int runtime = day_count * 86400 / dt;  // runtime in seconds
+  const int output_frequency = 120;            // output state every two minutes
+  const int num_bodies = 819;                // total number of bodies
+  const int bodies_per_process = num_bodies;   // 1 process here (sequential)
 
   std::vector<Body> saved_states;
   saved_states.reserve(output_frequency / runtime);
 
+  // Load initial state
+  NBodyPhysics *physics = new NBodyPhysics();
+  std::vector<Body> state;
+  std::vector<Body> new_state;
+  state.reserve(num_bodies);
+  new_state.reserve(num_bodies);
+
+  const int my_rank       = 0;
+  const int my_body_begin = my_rank * bodies_per_process;
+
+  if (my_rank == 0) loadStateFromFile(state, num_bodies);
+
   // Start timer
   boost::chrono::system_clock::time_point start = boost::chrono::system_clock::now();
 
-  // Main loop
+  cout << "beginning simulation\n";
+  // Main Loop
   for (int t = 0; t < runtime; ++t){
-    physics->updateState(dt);
+    physics->updateState(state, my_body_begin, bodies_per_process, dt);             // update the portion I am responsible for
 
-    if (t % output_frequency == 0){
-      cout << (float)t / runtime * 100 << endl;
-      physics->saveState(saved_states);
+    // simulate assigning vector
+    new_state = state;
+    state = new_state;
+
+    // Save state and output progress if root
+    if (my_rank == 0){
+      //if (t % output_frequency == 0){
+        cout << (float)t / runtime * 100 << endl;
+        physics->saveState(saved_states);
+	//}
     }
   }
 
-  // Done. Stop timer and Write positions.
+  // Done. Write state if root.
   boost::chrono::duration<double> sec = boost::chrono::system_clock::now() - start;
-  std::cout << "took " << sec.count() << " seconds\n";
-
-  const int num_bodies = physics->getNumBodies();
-  assert( saved_states.size() % num_bodies == 0);
-
-  std::ofstream fout;
-  fout.open("data.bin", std::ios::out | std::ios::binary);
-
-  typedef std::vector<Body>::iterator vec_iter;
-  for (vec_iter it = saved_states.begin(); it < saved_states.end(); it += num_bodies){
-    writePosition(saved_states, it, it + num_bodies, fout);
+  if (my_rank == 0){
+    std::cout << "took " << sec.count() << " seconds\n";
+    saveSimToFile(saved_states, num_bodies);
   }
 
-  fout.close();
   return 0;
 }
 
-void writePosition(std::vector<Body>& saved_states,
-                   std::vector<Body>::iterator start,
-                   std::vector<Body>::iterator end,
+void writePosition(const std::vector<Body>& saved_states,
+                   std::vector<Body>::const_iterator start,
+                   std::vector<Body>::const_iterator end,
                    std::ostream& fout)
 {
-  std::vector<Body>::iterator it = start;
+  std::vector<Body>::const_iterator it = start;
   while (it != end){
     double x = it->position.x;
     double y = it->position.y;
@@ -89,4 +85,51 @@ void writePosition(std::vector<Body>& saved_states,
 
     it++;
   }
+}
+
+void saveSimToFile(const std::vector<Body>& saved_states, const int num_bodies)
+{
+  // Done. Write state at specified interval
+  assert( saved_states.size() % num_bodies == 0);
+
+  std::ofstream fout;
+  fout.open("data.bin", std::ios::out | std::ios::binary);
+
+  typedef std::vector<Body>::const_iterator vec_iter;
+  for (vec_iter it = saved_states.begin(); it < saved_states.end(); ++it){
+    writePosition(saved_states, it, it + num_bodies, fout);
+  }
+
+  fout.close();
+}
+
+void loadStateFromFile(std::vector<Body>& initial_state, const int num_bodies)
+{
+  // Read state file
+  std::ifstream fin;
+  fin.open("galaxy.tab");
+  //fin.open("solar_system.csv");
+
+  // for big galaxy file
+  const float scale_factor = 1.5f;		
+  const float vel_factor = 8.0f;		
+  const float mass_factor = 120000.0f;	
+  const int KM = 1000;
+
+  for (int i = 0; i < num_bodies; ++i){
+    double pos_x, pos_y, pos_z;
+    double dx, dy, dz;
+    double mass;
+
+    fin >> mass >> pos_x >> pos_y >> pos_z >> dx >> dy >> dz;
+    //fin >> pos_x >> pos_y >> pos_z >> dx >> dy >> dz >> mass;
+
+    Body body( Vector(pos_x *scale_factor, pos_y*scale_factor, pos_z*scale_factor), 
+	       Vector(dx*vel_factor, dy*vel_factor, dz*vel_factor), mass*mass_factor);
+    //Body body( Vector(pos_x *KM, pos_y*KM, pos_z*KM), Vector(dx*KM, dy*KM, dz*KM), mass);
+
+    initial_state.push_back(body);
+  }
+
+  fin.close();
 }

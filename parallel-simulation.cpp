@@ -23,10 +23,10 @@ int main(int argc, char* argv[])
 
   // Simulation parameters
   const int dt = 60;                           // one minute time step
-  const int day_count = 365 * 2;               // sim for x years
+  const int day_count = 365 * 1;               // sim for x years
   const int runtime = day_count * 86400 / dt;  // runtime in seconds
   const int output_frequency = 120;            // output state every two minutes
-  const int bodies_per_process = 2;            // number of bodies each process will update
+  const int bodies_per_process = 12;           // number of bodies each process will update
   const int num_bodies = 24;                   // total number of bodies
 
   std::vector<Body> saved_states;
@@ -51,12 +51,12 @@ int main(int argc, char* argv[])
   for (int t = 0; t < runtime; ++t){
     physics->updateState(state, my_body_begin, bodies_per_process, dt);             // update the portion I am responsible for
     mpi::all_gather(world, &(state[my_body_begin]), bodies_per_process, new_state); // all_gather
-    state = new_state;
 
     // Save state and output progress if root
     if (my_rank == 0){
       if (t % output_frequency == 0){
-        cout << (float)t / runtime * 100 << endl;
+        //cout << (float)t / runtime * 100 << endl;
+        cout << new_state.size() << endl;
         physics->saveState(saved_states);
       }
     }
@@ -123,51 +123,3 @@ void loadStateFromFile(std::vector<Body>& initial_state, const int num_bodies)
 
   fin.close();
 }
-
-
-
-// int main(int argc, char* argv[])
-// {
-//   mpi::environment env(argc, argv);
-//   mpi::communicator world;
-
-//   if (world.rank() == 0) {
-//     std::vector<Body> bodies;
-//     std::vector<Body> bodies_new;
-//     Body b1( Vector(1.4, 2.4, 3.4), Vector(4, 5, 6), 10);
-//     Body b2( Vector(1.2, 2.2, 3.2), Vector(4.2, 5.2, 6.2), 10.2);
-
-//     Body bb[2];
-//     bb[0] = b1;
-//     bb[1] = b2;
-
-//     bodies.push_back(b1);
-//     bodies.push_back(b2);
-
-//     mpi::all_gather(world, &(bodies[0]), 2, bodies_new);
-//   }
-
-//   else {
-//     std::vector<Body> bodies;
-//     std::vector<Body> bodies_new;
-//     Body b1( Vector(1.9, 2.9, 3.9), Vector(4, 5, 6), 10);
-//     Body b2( Vector(1.23, 2.23, 3.23), Vector(4.23, 5.23, 6.23), 10.23);
-
-//     Body bb[2];
-//     bb[0] = b1;
-//     bb[1] = b2;
-
-//     bodies.push_back(b1);
-//     bodies.push_back(b2);
-
-//     mpi::all_gather(world, &(bodies[0]), 2, bodies_new);
-
-//     std::vector<Body>::iterator it;
-//     for (it = bodies_new.begin(); it != bodies_new.end(); ++it){
-//       cout << "\nbody: ";
-//       cout << it->position << it->velocity << it->total_force << it->mass << endl;
-//     }
-//   }
-
-//   return 0;
-// }
