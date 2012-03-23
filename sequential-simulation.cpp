@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
   const int day_count = 365 * 1;               // sim for x years
   const int runtime = day_count * 86400 / dt;  // runtime in seconds
   const int output_frequency = 120;            // output state every 120 minutes
-  const int num_bodies = 25;//820;                // total number of bodies
+  const int num_bodies = 820;//25                // total number of bodies
   const int bodies_per_process = num_bodies;   // 1 process here (sequential)
 
   // Load initial state
@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 
   // Main Loop
   for (int t = 0; t < runtime; ++t){
-    physics->updateState(state, my_body_begin, bodies_per_process, dt);             // update the portion I am responsible for
+    physics->updateState(state, my_body_begin, bodies_per_process, dt); // update my portion
 
     // simulate assigning vector to match parallel version
     new_state = state;
@@ -107,8 +107,8 @@ void loadStateFromFile(std::vector<Body>& initial_state, const int num_bodies)
 {
   // Read state file
   std::ifstream fin;
-  //  fin.open("galaxy.tab");
-  fin.open("solar_system.csv");
+  fin.open("galaxy.tab");
+  //fin.open("solar_system.csv");
 
   // for big galaxy file
   const float scale_factor = 1.5f;
@@ -121,12 +121,12 @@ void loadStateFromFile(std::vector<Body>& initial_state, const int num_bodies)
     double dx, dy, dz;
     double mass;
 
-    //fin >> mass >> pos_x >> pos_y >> pos_z >> dx >> dy >> dz;
-    fin >> pos_x >> pos_y >> pos_z >> dx >> dy >> dz >> mass;
+    fin >> mass >> pos_x >> pos_y >> pos_z >> dx >> dy >> dz;
+    Body body( Vector(pos_x *scale_factor, pos_y*scale_factor, pos_z*scale_factor),
+               Vector(dx*vel_factor, dy*vel_factor, dz*vel_factor), mass*mass_factor);
 
-    //Body body( Vector(pos_x *scale_factor, pos_y*scale_factor, pos_z*scale_factor),
-    //  Vector(dx*vel_factor, dy*vel_factor, dz*vel_factor), mass*mass_factor);
-    Body body( Vector(pos_x *KM, pos_y*KM, pos_z*KM), Vector(dx*KM, dy*KM, dz*KM), mass);
+    //fin >> pos_x >> pos_y >> pos_z >> dx >> dy >> dz >> mass;
+    //Body body( Vector(pos_x *KM, pos_y*KM, pos_z*KM), Vector(dx*KM, dy*KM, dz*KM), mass);
 
     initial_state.push_back(body);
   }
