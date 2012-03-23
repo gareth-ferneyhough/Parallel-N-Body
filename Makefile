@@ -7,7 +7,7 @@ SRC=$(wildcard *.cpp)
 all:	obj par seq
 
 obj:	n-body-physics.cpp n-body-physics.h parallel-simulation.cpp sequential-simulation.cpp
-	mpic++ -c $(SRC) $(CFLAGS) $^ 
+	mpic++ -c *.cpp $(CFLAGS) 
 
 par:	n-body-physics.cpp n-body-physics.h parallel-simulation.cpp
 	mpic++ -o par n-body-physics.o parallel-simulation.o $(CFLAGS) $(LIBS) -lboost_mpi

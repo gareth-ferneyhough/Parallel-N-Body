@@ -17,17 +17,18 @@ void writePosition(const std::vector<Body>& saved_states,
 
 int main(int argc, char* argv[])
 {
-  mpi::environment env(argc, argv);
-  mpi::communicator world;
-
-
   // Simulation parameters
   const int dt = 60;                           // one minute time step
   const int day_count = 365 * 1;               // sim for x years
   const int runtime = day_count * 86400 / dt;  // runtime in seconds
   const int output_frequency = 120;            // output state every 120 minutes
   const int num_bodies = 25;//820;                   // total number of bodies
-  const int bodies_per_process = 2;//41;           // number of bodies each process will update
+  const int bodies_per_process = 5;//41;           // number of bodies each process will update
+
+  mpi::environment env(argc, argv);
+  mpi::communicator world;
+  assert(world.size() == num_bodies / bodies_per_process);
+
 
   // Load initial state
   NBodyPhysics *physics = new NBodyPhysics();
@@ -56,12 +57,13 @@ int main(int argc, char* argv[])
     physics->updateState(state, my_body_begin, bodies_per_process, dt);             // update the portion I am responsible for
     mpi::all_gather(world, &(state[my_body_begin]), bodies_per_process, new_state); // all_gather
 
+    state = new_state;
+
     // Save state and output progress if root
     if (my_rank == 0){
       if (t % output_frequency == 0){
         cout << (float)t / runtime * 100 << endl;
         saved_states.insert(saved_states.end(), state.begin(), state.end());
-        //physics->saveState(saved_states);
       }
     }
   }
