@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
 {
   // Simulation parameters
   const int dt = 60;                           // one minute time step
-  const int day_count = 365 * 1;               // sim for x years
+  const int day_count = 1;//365 * 1;               // sim for x years
   const int runtime = day_count * 86400 / dt;  // runtime in seconds
   const int output_frequency = 120;            // output state every 120 minutes
   const int num_bodies = 820;//25                // total number of bodies
@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
   boost::chrono::duration<double> sec = boost::chrono::system_clock::now() - start;
   if (my_rank == 0){
     std::cout << "took " << sec.count() << " seconds\n";
-    saveSimToFile(saved_states, num_bodies);
+    //saveSimToFile(saved_states, num_bodies);
   }
 
   return 0;
