@@ -16,14 +16,11 @@ int main(int argc, char* argv[])
 {
   // Simulation parameters
   const int dt = 60;                           // one minute time step
-  const int day_count = 365 * .1;               // sim for x years
+  const int day_count = 365 * 1;               // sim for x years
   const int runtime = day_count * 86400 / dt;  // runtime in seconds
-  const int output_frequency = 120;            // output state every two minutes
-  const int num_bodies = 819;                // total number of bodies
+  const int output_frequency = 120;            // output state every 120 minutes
+  const int num_bodies = 25;//820;                // total number of bodies
   const int bodies_per_process = num_bodies;   // 1 process here (sequential)
-
-  std::vector<Body> saved_states;
-  saved_states.reserve(output_frequency / runtime);
 
   // Load initial state
   NBodyPhysics *physics = new NBodyPhysics();
@@ -35,26 +32,29 @@ int main(int argc, char* argv[])
   const int my_rank       = 0;
   const int my_body_begin = my_rank * bodies_per_process;
 
-  if (my_rank == 0) loadStateFromFile(state, num_bodies);
+  std::vector<Body> saved_states;
+  if (my_rank == 0){
+    loadStateFromFile(state, num_bodies);
+    saved_states.reserve(output_frequency / runtime);
+  }
 
-  // Start timer
+  // Start timer and go
   boost::chrono::system_clock::time_point start = boost::chrono::system_clock::now();
 
-  cout << "beginning simulation\n";
   // Main Loop
   for (int t = 0; t < runtime; ++t){
     physics->updateState(state, my_body_begin, bodies_per_process, dt);             // update the portion I am responsible for
 
-    // simulate assigning vector
+    // simulate assigning vector to match parallel version
     new_state = state;
     state = new_state;
 
     // Save state and output progress if root
     if (my_rank == 0){
-      //if (t % output_frequency == 0){
+      if (t % output_frequency == 0){
         cout << (float)t / runtime * 100 << endl;
-        physics->saveState(saved_states);
-	//}
+        saved_states.insert(saved_states.end(), state.begin(), state.end());
+      }
     }
   }
 
@@ -107,13 +107,13 @@ void loadStateFromFile(std::vector<Body>& initial_state, const int num_bodies)
 {
   // Read state file
   std::ifstream fin;
-  fin.open("galaxy.tab");
-  //fin.open("solar_system.csv");
+  //  fin.open("galaxy.tab");
+  fin.open("solar_system.csv");
 
   // for big galaxy file
-  const float scale_factor = 1.5f;		
-  const float vel_factor = 8.0f;		
-  const float mass_factor = 120000.0f;	
+  const float scale_factor = 1.5f;
+  const float vel_factor = 8.0f;
+  const float mass_factor = 120000.0f;
   const int KM = 1000;
 
   for (int i = 0; i < num_bodies; ++i){
@@ -121,12 +121,12 @@ void loadStateFromFile(std::vector<Body>& initial_state, const int num_bodies)
     double dx, dy, dz;
     double mass;
 
-    fin >> mass >> pos_x >> pos_y >> pos_z >> dx >> dy >> dz;
-    //fin >> pos_x >> pos_y >> pos_z >> dx >> dy >> dz >> mass;
+    //fin >> mass >> pos_x >> pos_y >> pos_z >> dx >> dy >> dz;
+    fin >> pos_x >> pos_y >> pos_z >> dx >> dy >> dz >> mass;
 
-    Body body( Vector(pos_x *scale_factor, pos_y*scale_factor, pos_z*scale_factor), 
-	       Vector(dx*vel_factor, dy*vel_factor, dz*vel_factor), mass*mass_factor);
-    //Body body( Vector(pos_x *KM, pos_y*KM, pos_z*KM), Vector(dx*KM, dy*KM, dz*KM), mass);
+    //Body body( Vector(pos_x *scale_factor, pos_y*scale_factor, pos_z*scale_factor),
+    //  Vector(dx*vel_factor, dy*vel_factor, dz*vel_factor), mass*mass_factor);
+    Body body( Vector(pos_x *KM, pos_y*KM, pos_z*KM), Vector(dx*KM, dy*KM, dz*KM), mass);
 
     initial_state.push_back(body);
   }

@@ -46,6 +46,11 @@ void NBodyPhysics::printState() const
   }
 }
 
+void NBodyPhysics::setNewState(std::vector<Body>& state)
+{
+  bodies.insert(bodies.begin(), state.begin(), state.end());
+}
+
 int NBodyPhysics::getNumBodies() const
 {
   return bodies.size();
