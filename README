@@ -1,0 +1,26 @@
+Boost.MPI Parallel N-Body Simulator
+Copyright (C) 2012 Gareth Ferneyhough
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+---------------------------------------------------------------------
+A sequential (no MPI) and parallel (Boost.MPI) version are included. 
+Additionally, a file containing 25 bodies in the solar system are included
+in order to set up initial conditions for a solar system simulation. A Matlab 
+plotting program is provided for visualization. Both the plotter, and the 
+solar system data were obtained from: 
+
+http://www.mathworks.com/matlabcentral/fileexchange/26114-solar-system-model-planetary-n-body-modelling
+
+Note that the original author retains copyright on the Matlab visualization script. 
