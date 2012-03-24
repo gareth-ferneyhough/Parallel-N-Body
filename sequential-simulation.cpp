@@ -1,3 +1,9 @@
+/* sequential-simulation.cpp    *
+ * Sequential n-body simulation *
+ * By: Gareth Ferneyhough       *
+ * University of Nevada, Reno   */
+
+
 #define BOOST_CHRONO_HEADER_ONLY
 
 #include <fstream>
@@ -15,20 +21,19 @@ void writePosition(const std::vector<Body>& saved_states,
 int main(int argc, char* argv[])
 {
   // Simulation parameters
-  const int dt = 60;                           // one minute time step
-  const int day_count = 1;//365 * 1;               // sim for x years
-  const int runtime = day_count * 86400 / dt;  // runtime in seconds
-  const int output_frequency = 120;            // output state every 120 minutes
-  const int num_bodies = 820;//25                // total number of bodies
-  const int bodies_per_process = num_bodies;   // 1 process here (sequential)
+  const int  dt = 60;                           // one minute time step
+  const int  day_count = 365 * 284;             // sim for 284 years
+  const int  output_frequency = 120;            // output state every 120 minutes
+  const int  num_bodies = 25;                   // total number of bodies
+  const int  bodies_per_process = num_bodies;   // 1 process here (sequential)
+  const long runtime = (long long)day_count * 86400 / dt; // runtime in seconds
 
   // Load initial state
   NBodyPhysics *physics = new NBodyPhysics();
   std::vector<Body> state;
-  std::vector<Body> new_state;
   state.reserve(num_bodies);
-  new_state.reserve(num_bodies);
 
+  // This is leftover from parallel version, but its fine.
   const int my_rank       = 0;
   const int my_body_begin = my_rank * bodies_per_process;
 
@@ -45,10 +50,6 @@ int main(int argc, char* argv[])
   for (int t = 0; t < runtime; ++t){
     physics->updateState(state, my_body_begin, bodies_per_process, dt); // update my portion
 
-    // simulate assigning vector to match parallel version
-    new_state = state;
-    state = new_state;
-
     // Save state and output progress if root
     if (my_rank == 0){
       if (t % output_frequency == 0){
@@ -62,7 +63,7 @@ int main(int argc, char* argv[])
   boost::chrono::duration<double> sec = boost::chrono::system_clock::now() - start;
   if (my_rank == 0){
     std::cout << "took " << sec.count() << " seconds\n";
-    //saveSimToFile(saved_states, num_bodies);
+    saveSimToFile(saved_states, num_bodies);
   }
 
   return 0;
@@ -107,13 +108,8 @@ void loadStateFromFile(std::vector<Body>& initial_state, const int num_bodies)
 {
   // Read state file
   std::ifstream fin;
-  fin.open("galaxy.tab");
-  //fin.open("solar_system.csv");
+  fin.open("solar_system.csv");
 
-  // for big galaxy file
-  const float scale_factor = 1.5f;
-  const float vel_factor = 8.0f;
-  const float mass_factor = 120000.0f;
   const int KM = 1000;
 
   for (int i = 0; i < num_bodies; ++i){
@@ -121,12 +117,9 @@ void loadStateFromFile(std::vector<Body>& initial_state, const int num_bodies)
     double dx, dy, dz;
     double mass;
 
-    fin >> mass >> pos_x >> pos_y >> pos_z >> dx >> dy >> dz;
-    Body body( Vector(pos_x *scale_factor, pos_y*scale_factor, pos_z*scale_factor),
-               Vector(dx*vel_factor, dy*vel_factor, dz*vel_factor), mass*mass_factor);
-
-    //fin >> pos_x >> pos_y >> pos_z >> dx >> dy >> dz >> mass;
-    //Body body( Vector(pos_x *KM, pos_y*KM, pos_z*KM), Vector(dx*KM, dy*KM, dz*KM), mass);
+    fin >> pos_x >> pos_y >> pos_z >> dx >> dy >> dz >> mass;
+    Body body( Vector(pos_x*KM, pos_y*KM, pos_z*KM),
+               Vector(dx*KM, dy*KM, dz*KM), mass);
 
     initial_state.push_back(body);
   }

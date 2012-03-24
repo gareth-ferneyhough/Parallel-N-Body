@@ -1,3 +1,8 @@
+/* n-body-physics.h               *
+ * Physics for n-body simulation  *
+ * By: Gareth Ferneyhough         *
+ * University of Nevada, Reno     */
+
 #include <vector>
 #include <iostream>
 #include <ostream>
